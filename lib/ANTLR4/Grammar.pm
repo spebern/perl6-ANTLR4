@@ -1,6 +1,6 @@
 use v6;
-#use Grammar::Tracer;
-grammar ANTLR4::Grammar {
+
+unit grammar ANTLR4::Grammar;
 
 #
 # Not currently acted upon
@@ -38,6 +38,11 @@ token DIGITS
 	{
 	<DIGIT>+
 	}
+
+token NOT
+        {
+        '~'
+        }
 
 #  Allow unicode rule/token names
 
@@ -380,7 +385,7 @@ rule labeledLexerElement
  
 rule lexerBlock
  	{
-	'~'? '(' <COMMENTS>? <lexerAltList>? ')'
+	<NOT>? '(' <COMMENTS>? <lexerAltList>? ')'
  	}
  
 #  E.g., channel(HIDDEN), skip, more, mode(INSIDE), push(INSIDE), pop
@@ -407,7 +412,7 @@ rule blockAltList
  
 rule parserElement
  	{
-	<elementOptions>? <element>*
+	<options=elementOptions>? <element>*
  	}
  
 rule element
@@ -510,13 +515,10 @@ rule terminal
  
 rule elementOptions
  	{
-	'<' <elementOption>+ % ',' '>'
+	'<' <option=elementOption>+ % ',' '>'
  	}
  
 rule elementOption
 	{
 	<key=ID> ['=' [<value=ID> | <value=STRING_LITERAL>] ]?
 	}
-}
- 
-# vim: ft=perl6

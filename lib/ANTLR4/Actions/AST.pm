@@ -130,571 +130,337 @@ most complex, and is described in detail at the appropriate place.
 =end pod
 
 use v6;
-class ANTLR4::Actions::AST
-	{
-	method grammarType($/)
-		{
-		make $/[0] ?? ~$/[0] !! 'DEFAULT'
-		}
 
-	method ID($/)
-		{
-		make ~$/
-		}
+unit class ANTLR4::Actions::AST;
 
-	method ID_list($/)
-		{
-		make @<ID>>>.ast
-		}
-
-	method optionValue($/)
-		{
-		# XXX Should be able to be written cleaner.
-		make $/<DIGITS>
-			?? +$/<DIGITS>
-			!! $/<STRING_LITERAL>
-			?? ~$/<STRING_LITERAL>[0]
-			!! $/<ID_list>.ast
-		}
-
-	method option($/)
-		{
-		make ~$/<key> => $/<optionValue>.ast
-		}
-
-	method optionsSpec($/)
-		{
-		make @<option>>>.ast
-		}
-
-	method delegateGrammar($/)
-		{
-		make ~$/<key> => $/<value>.ast
-		}
-
-	method delegateGrammars($/)
-		{
-		make @<delegateGrammar>>>.ast
-		}
-
-	method ID_list_trailing_comma($/)
-		{
-		make $<ID>>>.ast
-		}
-
-	method tokensSpec($/)
-		{
-		make $/<ID_list_trailing_comma>.ast
-		}
-
-	method action($/)
-		{
-		make ~$/<action_name> => ~$/<ACTION>
-		}
-
-	method terminal($/)
-		{
-		make
-			[${ type         => 'terminal',
-				content      => ~$/<scalar>[0],
-				alias        => Nil,
-				modifier     => Nil,
-				greedy       => False,
-				complemented => False }]
-		}
-
-	method atom($/)
-		{
-		make $/<terminal>.ast
-		}
-
-	method element($/)
-		{
-		make
-			{
-			type     => 'concatenation',
-			label    => Nil,
-			options  => [ ],
-			commands => [ ],
-			contents => $/<atom>.ast
-			}
-		}
-
-	method elementOption($/)
-		{
-		make ~$/<key> => ~$/<value>
-		}
- 
-	method elementOptions($/)
-		{
-		make @<elementOption>>>.ast
-		}
-
-	method parserElement($/)
-		{
-		my @element = @<element>>>.ast;
-
-		# Add the options to the rule afterward, if there are any.
-		#
-		@element[0].<options> = $/<elementOptions>.ast
-			if $/<elementOptions>;
-
-		make @element;
-		}
-
-	method parserAlt($/)
-		{
-		my $ast =
-			{
-			type     => 'alternation',
-			label    => Nil,
-			options  => [ ],
-			commands => [ ],
-			contents => $/<parserElement>.ast
-			};
-
-		# Add the label to the rule afterward, if there is one.
-		#
-		$ast.<contents>[0]<label> = ~$/<label> if $/<label>;
-		make $ast;
-		}
-
-	method parserAltList($/)
-		{
-		make @<parserAlt>>>.ast
-		}
-
-	method ruleReturns($/)
-		{
-		make ~$/<ARG_ACTION>
-		}
-
-	method throwsSpec($/)
-		{
-		make @<ID>>>.ast
-		}
-
-	method localsSpec($/)
-		{
-		make ~$/<ARG_ACTION>
-		}
-
-	method parserRuleSpec($/)
-		{
-		make 
-			{
-			type      => 'rule',
-			name      => $/<name>.ast,
-			attribute => $/<attribute> ?? ~$/<attribute>  !! Nil,
-			action    => $/<action>    ?? ~$/<action>     !! Nil,
-			return    => $/<returns>   ?? $/<returns>.ast !! Nil,
-			throws    => $<throws>     ?? $/<throws>.ast  !! [ ],
-			local     => $/<locals>    ?? $/<locals>.ast  !! Nil,
-			options   => $<options>    ?? $/<options>.ast !! [ ],
-			contents  => $/<parserAltList>.ast
-			}
-		}
-
-	# And here's where we reuse the <terminal> ... er, term.
-	#
-	method lexerAtom($/)
-		{
-		make $/<terminal>.ast
-		}
-
-	method lexerElement($/) # 'channel' not in this term.
-		{
-		make
-			{
-			type     => 'concatenation',
-			label    => Nil,
-			options  => [ ],
-			commands => [ ], # XXX Filled in by the next layer up
-			contents => [ $<lexerAtom>.ast ]
-			}
-		}
-
-	method lexerCommand($/)
-		{
-		make ~$/<lexerCommandName> => ~$/<lexerCommandExpr>[0]
-		}
-
-	method lexerCommands($/)
-		{
-		make @<lexerCommand>>>.ast
-		}
-
-	method lexerAlt($/)
-		{
-		my @lexerElement = @<lexerElement>>>.ast;
-
-		# Add the command to the lexer element afterward, if any.
-		#
-		@lexerElement[0]<commands> = [ $/<lexerCommands>.ast ];
-		make
-			{
-			type     => 'alternation',
-			label    => Nil,
-			options  => [ ],
-			commands => [ ],
-			contents => @lexerElement
-			}
-		}
-
-	method lexerAltList($/)
-		{
-		make @<lexerAlt>>>.ast
-		}
-
-	method lexerRuleSpec($/)
-		{
-		make 
-			{
-			type      => 'rule',
-			name      => $/<name>.ast,
-			attribute => Nil,
-			action    => Nil,
-			return    => Nil,
-			throws    => [ ],
-			local     => Nil,
-			options   => [ ],
-			contents  => $/<lexerAltList>.ast
-			}
-		}
-
-	method ruleSpec($/)
-		{
-		make $/<parserRuleSpec>.ast || $/<lexerRuleSpec>.ast
-		}
-
-	method TOP($/)
-		{
-		my ( @options, @imports, @tokens, @action );
-
-		@options.append( $_.<options>.ast ) for $/<prequelConstruct>;
-
-		@tokens.append( $_.<tokens>.ast ) for $/<prequelConstruct>;
-		@action.append( $_.<actions>.ast ) for $/<prequelConstruct>;
-
-		# XXX Apparently the way imports builds the list is mildly broken.
-		for $/<prequelConstruct> -> $prequel
-			{
-			next unless $prequel.<imports>.ast;
-			@imports = $prequel.<imports>.ast;
-			last;
-			}
-
-		make
-			{
-			type     => $<grammarType>.ast,
-			name     => ~$/<name>,
-			options  => @options,
-			imports  => @imports,
-			tokens   => @tokens,
-			actions  => @action,
-			contents => @<ruleSpec>>>.ast
-			}
-		}
-
-#`(
-method lexerAlt($/)
-	{
-#`(
-	make
-		{
-		type     => 'concatenation',
-		contents => @<lexerElement>>>.ast,
-		label    => Nil,
-                options  => [ ],
-		commands => $/<lexerCommands>.ast || [ ],
-		}
-)
-	make
-		{
-		type    => 'concatenation',
-		label   => Nil,
-		options => [ ],
-commands => [ skip => Nil ],
-contents => [$<lexerElement>[0].ast],
-		}
-	}
-
-method lexerElement($/)
-	{
-	make
-		{
-		type         => $/<ACTION>
-			     ?? 'action'
-			     !! $/<lexerAtom>
-			     ?? $/<lexerAtom>.ast.<type>
-			     !! $/<lexerBlock>.ast.<type>,
-		alias        => $/<labeledElement>
-			     ?? $/<labeledElement><ID>
-			     !! Nil,
-		modifier     => $/<ebnfSuffix>.ast.<modifier>,
-		greedy       => $/<ebnf><ebnfSuffix>.ast.<greedy>
-			     || $/<ebnfSuffix>.ast.<greedy>
-			     || False,
-		complemented => $/<lexerAtom>
-			     ?? $/<lexerAtom>.ast.<complemented>
-			     !! $/<lexerBlock>.ast.<complemented>,
-		content      => $/<ACTION>
-			     ?? $/<ACTION>.ast
-			     !! $/<lexerAtom>
-			     ?? $/<lexerAtom>.ast.<content>
-			     !! $/<lexerBlock>.ast.<content>,
-		}
-	}
-
-method lexerBlock($/)
-	{
-#`(
-	make
-		{
-		type         => 'capturing group',
-		contents     => @<lexeAltList>>>.ast,
-		complemented => $/[0] || False,
-		commands     => [ ]
-		}
-)
-
-	make
-		{
-		type         => 'capturing group',
-#		contents     => @<lexeAltList>>>.ast,
-contents =>
-  [{ type     => 'alternation',
-     label    => Nil,
-     options  => [ ],
-     commands => [ ],
-     contents =>
-       [{ type     => 'concatenation',
-          label    => Nil,
-          options  => [ ],
-          commands => [ ],
-          contents  =>
-            [{ type         => 'terminal',
-               content      => '1',
-               alias        => Nil,
-               modifier     => Nil,
-               greedy       => False,
-               complemented => False }] },
-        { type     => 'concatenation',
-          label    => Nil,
-          options  => [ ],
-          commands => [ ],
-          contents  =>
-             [{ type         => 'terminal',
-                content      => '2',
-                alias        => Nil,
-                modifier     => Nil,
-                greedy       => False,
-                complemented => False }] }] }],
-complemented => $/[0] || False,
-command      => [ ]
+method TOP($/) {
+    make {
+        name  => ~$<name>,
+        type  => $<grammarType>.made,
+        rules => $<ruleSpec>».made,
+        |<options imports tokens actions>.map(
+            -> $key {
+                $key => $<prequelConstruct>.grep({ $_{$key} }).map({ |$_{$key}.made })
+            }
+        ),
+    }
 }
-	}
+
+method throwsSpec($/) {
+    make $<ID>».made;
+}
+
+method action($/) {
+    make ~$<action_name> => ~$<ACTION>;
+}
+
+method tokensSpec($/) {
+    make $<ID_list_trailing_comma>.made;
+}
+
+method ID_list_trailing_comma($/) {
+    make $<ID>».made;
+}
+
+method delegateGrammars($/) {
+    make $<delegateGrammar>».made;
+}
+
+method delegateGrammar($/) {
+    make ~$<key> => $<value>.made;
+}
+
+method optionsSpec($/) {
+    make $<option>».made;
+}
+
+method option($/) {
+    make ~$<key> => $<optionValue>.made;
+}
+
+method elementOptions($/) {
+    make $<option>».made;
+}
+
+method elementOption($/) {
+    make ~$<key> => $<value>.made;
+}
 
 
-method element($/)
-	{
-#`(
-	make
-		{ 
-		type => $/<labeledElement>
-			?? 'nonterminal'
-			!! $/<ACTION>
-			?? 'action'
-			!! $/<ebnf><block><blockAltList>
-			?? 'capturing group'
-			!! $/<atom>.ast.<type>,
-		alias => $/<labeledElement>
-			?? $/<labeledElement><ID>
-			!! Nil,
-		content      => $/<labeledElement><atom>
-			?? $/<labeledElement><atom>.ast.<content>
-			!! $/<labeledElement><block>
-			?? $/<labeledElement><block><blockAtList>.ast
-			!! $/<ACTION>
-			?? $/<ACTION>.ast
-			!! $/<atom>
-			?? $/<atom>.ast.<content>
-			!! $/<ebnf><block>.ast,
-		complemented => $/<atom><notSet>.defined,
-		greedy       => $/<ebnf><ebnfSuffix>.ast.<greedy>
-			|| $/<ebnfSuffix>.ast.<greedy>
-			|| False,
-		modifier     => $/<ebnf><ebnfSuffix>.ast.<modifier>
-			|| $/<ebnfSuffix>.ast.<modifier>
-		 }
-)
+method optionValue($/) {
+    make $<DIGITS> ?? +$<DIGITS>            !! $<STRING_LITERAL>
+                   ?? ~$<STRING_LITERAL>[0] !! $<ID_list>.made;
+}
 
-	if $/<ebnf><block><blockAltList>
-		{
-		make
-			{
-			type         => $/<ebnf>.ast.<type>,
-			alias        => $/<labeledElement><ID>,
-			modifier     => $/<ebnf>.ast.<modifier>
-				     || $/<ebnfSuffix>.ast.<modifier>,
-			greedy       => $/<ebnf>.ast.<greedy>
-				     || $/<ebnfSuffix>.ast.<greedy>
-				     || False,
-			complemented => $/<atom><notSet>.defined,
-			content      => $/<ebnf>.ast.<content>,
-			}
-		}
-	elsif $/<atom>
-		{
-		make
-			{
-			type         => $/<atom>.ast.<type>,
-			alias        => $/<labeledElement><ID>,
-			modifier     => $/<ebnf>.ast.<modifier>
-					|| $/<ebnfSuffix>.ast.<modifier>,
-			greedy       => $/<ebnf>.ast.<greedy>
-					|| $/<ebnfSuffix>.ast.<greedy>
-					|| False,
-			complemented => $/<atom><notSet>.defined,
-			content      => $/<atom>.ast.<content>,
-			}
-		}
-	elsif $/<ACTION>
-		{
-		make
-			{
-			type         => 'action',
-			alias        => $/<labeledElement><ID>,
-			modifier     => $/<ebnf>.ast.<modifier>
-					|| $/<ebnfSuffix>.ast.<modifier>,
-			greedy       => $/<ebnf>.ast.<greedy>
-					|| $/<ebnfSuffix>.ast.<greedy>
-					|| False,
-			complemented => $/<atom><notSet>.defined,
-			content      => $/<ACTION>.ast,
-			}
-		}
-	}
- 
-method ebnf($/)
-	{
-my @x = $/<block><blockAltList><parserElement>;
-my @foo = @x>>.ast;
-	make
-		{
-		type     => 'capturing group',
-		modifier => $/<ebnfSuffix>.ast.<modifier>,
-		greedy   => $/<ebnfSuffix>.ast.<greedy>,
-		content  =>
-			[
-				{
-				type     => 'concatenation',
-				label    => Nil,
-				options  => [ ],
-				commands => [ ],
-				content  => @foo[0], # XXX
-				}
-			]
-		}
-	}
+method ID_list($/) {
+    make $<ID>».made;
+}
 
-method ebnfSuffix($/)
-	{
-	make
-		{
-		modifier => ~$/<MODIFIER>,
-		greedy   => $/<GREED>.defined
-		}
-	}
+method ID($/) {
+    make ~$/;
+}
 
-method lexerAtom($/)
-	{
-#			!! $/<range>.ast
-#			|| $/<LEXER_CHAR_SET>.ast
-#			|| $/<terminal><scalar>.ast
-			|| $/<notSet>.ast.<content>,
-	make
-		{
-		type => ( $/.substr(0,1) eq '.' )
-			?? 'regular expression'
-			!! $/<range>
-			?? 'range'
-			!! $/<notSet><setElement><LEXER_CHAR_SET>
-			?? 'character class'
-			!! $/<notSet><setElement><terminal><STRING_LITERAL>
-			?? 'terminal'
-			!! $/<LEXER_CHAR_SET>
-			?? 'character class'
-			!! $/<terminal><STRING_LITERAL>
-			?? 'terminal'
-			!! $/<notSet><blockSet>
-			?? 'capturing group'
-			!! 'nonterminal',
-		content => ( $/.substr(0,1) eq '.' )
-			?? '.'
-			!! $/<range>.ast
-			|| $/<LEXER_CHAR_SET>.ast
-			|| $/<terminal><scalar>.ast
-			|| $/<notSet>.ast.<content>,
-		complemented => $/<notSet>.defined
-		}
-	}
+method grammarType($/) {
+    make ~$/[0] if $/[0];
+}
 
-method atom($/)
-	{
-	make
-		{
-		type         => $/<notSet>.ast.<type>
-		             ?? $/<notSet>.ast.<type>
-		             !! $/<range>
-		             ?? 'range'
-		             !! $/<terminal><ID> # XXX work on this later.
-		             ?? 'nonterminal'
-		             !! $/<DOT>
-		             ?? 'regular expression'
-		             !! 'terminal',
-		complemented => $/<notSet>.defined,
-		content      => $/<notSet>
-		             ?? $/<notSet>.ast.<content>
-		             !! $/<range>
-		             ?? $/<range>.ast
-		             !! $/<DOT>
-		             ?? ~$/<DOT>
-		             !! $/<terminal><scalar>.ast
-		}
-	}
+method ruleSpec($/) {
+    make $<parserRuleSpec>.made || $<lexerRuleSpec>.made;
+}
 
-method notSet($/)
-	{
-	make
-		{
-		type    => $/<blockSet>
-			?? 'capturing group'
-			!! $/<setElement>.ast.<type>,
-		content => $/<blockSet>
-			?? $/<blockSet>.ast
-			!! $/<setElement>.ast.<content>
-		}
-	}
+method lexerRuleSpec($/) {
+    make {
+        name      => ~$<name>,
+        content   => $<lexerAltList>.made,
+    }
+}
 
-method setElement($/)
-	{
-	make
-		{
-		type => $/<LEXER_CHAR_SET>
-			?? 'character class'
-			!! $/<terminal><ID>
-			?? 'nonterminal'
-			!! 'terminal',
-		content => $/<LEXER_CHAR_SET>
-			?? $/<LEXER_CHAR_SET>.ast
-			!! $/<range>
-			?? $/<range>.ast
-			!! $/<terminal><scalar>.ast
-		}
-	}
-)
+method parserRuleSpec($/) {
+    make {
+        name      => ~$<name>,
+        content   => $<parserAltList>.made,
+        attribute => $<attribute> ?? ~$<attribute>           !! Nil,
+        action    => $<action>    ?? ~$<action>              !! Nil,
+        returns   => $<returns>   ?? ~$<returns><ARG_ACTION> !! Nil,
+        throws    => $<throws>    ??  $<throws>.made         !! Nil,
+        locals    => $<locals>    ?? ~$<locals><ARG_ACTION>  !! Nil,
+        options   => $<options>   ??  $<options>.made        !! Nil,
+    }
+}
 
-	}
+method lexerAltList($/) {
+    # There must be a nicer way...
+    my @contents = $<lexerAlt>».made;
+    # @contents.append: |$<lexerAlt>».made;
+    if @contents.elems == 1 {
+        make @contents[0];
+    }
+    else {
+        make {
+            type     => 'alternation',
+            contents => @contents,
+        }
+    }
+}
 
-# vim: ft=perl6
+method parserAltList($/) {
+    if $<parserAlt>.elems == 1 {
+        make $<parserAlt>[0].made;
+    }
+    else {
+        make {
+            type     => 'alternation',
+            contents => $<parserAlt>».made,
+        }
+    }
+}
+
+method lexerAlt($/) {
+    my @elements = $<lexerElement>».made;
+
+    if @elements.elems == 1 {
+        make @elements[0];
+    }
+    else {
+        make {
+            type     => 'concatenation',
+            contents => @elements,
+        }
+    }
+
+    if $<lexerCommands> {
+        $/.made<commands> = $<lexerCommands>.made;
+    }
+}
+
+method lexerCommands($/) {
+    make $<lexerCommand>».made;
+}
+
+method lexerCommand($/) {
+    make { ~$<ID> => Nil };
+}
+
+method parserAlt($/) {
+    make $<parserElement>.made;
+    $/.made<options label> =
+        $<parserElement><options> ?? $<parserElement><options>.made !! Nil,
+        $<label>                  ?? ~$<label>                      !! Nil;
+}
+
+method blockAltList($/) {
+    make {
+        type     => 'alternation',
+        contents => $<parserElement>».made,
+    }
+}
+
+method parserElement($/) {
+    my @contents = $<element>».made;
+    if @contents.elems == 1 {
+        make @contents[0];
+    }
+    else {
+        make {
+            type     => 'concatenation',
+            contents => @contents,
+        }
+    }
+}
+
+method element($/) {
+    my Str $modifier = $<ebnfSuffix><MODIFIER>        ?? ~$<ebnfSuffix><MODIFIER>
+                    !! $<ebnf><ebnfSuffix><MODIFIER>  ?? ~$<ebnf><ebnfSuffix><MODIFIER> !! '';
+    my Bool $greedy  = $<ebnfSuffix><GREED>       ?? True
+                    !! $<ebnf><ebnfSuffix><GREED> ?? True !! False;
+
+    if $<atom> {
+        make $<atom>.made;
+    }
+    elsif $<ACTION> {
+        make {
+            type    => 'action',
+            content => ~$<ACTION>,
+        }
+    } 
+    elsif $<ebnf><block> {
+        make $<ebnf><block>.made;
+    }
+
+    $/.made<modifier> = $modifier;
+    $/.made<greedy>   = $greedy;
+}
+
+method atom($/) {
+    if $<notSet> {
+        my $notSet = $<notSet>;
+        if $notSet<setElement> {
+            make $notSet<setElement>.made;
+        }
+        elsif $notSet<blockSet> {
+            make $notSet<blockSet>.made;
+        }
+        $/.made<complemented> = True;
+    }
+    elsif $<LEXER_CHAR_SET> {
+        make $<LEXER_CHAR_SET>.made;
+    }
+    elsif $<range> {
+        make $<range>.made;
+    }
+    elsif $<terminal> {
+        make $<terminal>.made;
+    }
+    else {
+        make {
+            type    => 'regular expression',
+            content => $/.Str.trim,
+        }
+    }
+}
+
+method lexerElement($/) {
+    my Str $modifier = $<ebnfSuffix><MODIFIER> ?? ~$<ebnfSuffix><MODIFIER> !! ''; 
+    my Bool $greedy  = $<ebnfSuffix><GREED> ?? True !! False;
+
+    if $<lexerAtom> {
+        make $<lexerAtom>.made;
+    }
+    elsif $<lexerBlock> {
+        make $<lexerBlock>.made;
+    }
+
+    $/.made<modifier> = $modifier;
+    $/.made<greedy>   = $greedy;
+}
+
+method lexerBlock($/) {
+    make {
+        type         => 'capturing group',
+        content      =>  $<lexerAltList>.made,
+        complemented => $<NOT> ?? True !! False,
+    }
+}
+
+method block($/) {
+    make {
+        type         => 'capturing group',
+        content      =>  $<blockAltList>.made,
+        complemented => $<NOT> ?? True !! False,
+    }
+}
+
+method lexerAtom($/) {
+    if $<notSet> {
+        my $notSet = $<notSet>;
+        if $notSet<setElement> {
+            make $notSet<setElement>.made;
+        }
+        elsif $notSet<blockSet> {
+            make $notSet<blockSet>.made;
+        }
+        $/.made<complemented> = True;
+    }
+    elsif $<LEXER_CHAR_SET> {
+        make $<LEXER_CHAR_SET>.made;
+    }
+    elsif $<range> {
+        make $<range>.made;
+    }
+    elsif $<terminal> {
+        make $<terminal>.made;
+    }
+    else {
+        make {
+            type    => 'regular expression',
+            content => $/.Str.trim,
+        }
+    }
+}
+
+method LEXER_CHAR_SET($/) {
+    make {
+        type     => 'character class',
+        contents => $/[0]».<LEXER_CHAR_SET_RANGE>».made,
+    }
+}
+
+method LEXER_CHAR_SET_RANGE($/) {
+    make ~$/ eq ' ' ?? '\s' !! ~$/;
+}
+
+method range($/) {
+    make {
+        type => 'range',
+        from => ~$<from>,
+        to   => ~$<to>,
+    }
+}
+
+method setElement($/) {
+    if $<LEXER_CHAR_SET> {
+        make $<LEXER_CHAR_SET>.made;
+    }
+    else {
+        my Str $content = $/.Str.trim;
+        if $content eq q{'"'} {
+            make {
+               type     => 'character class',
+               contents => [ '"' ],
+            }
+        }
+        else {
+            make {
+                type    => $<terminal><STRING_LITERAL> ?? 'terminal' !! 'nonterminal',
+                content => $content,
+            }
+        }
+    }
+}
+
+method terminal($/) {
+    make {
+        type    => $<STRING_LITERAL> ?? 'terminal' !! 'nonterminal',
+        content => $/.Str.trim,
+    }
+}
