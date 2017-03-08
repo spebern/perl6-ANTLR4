@@ -2,7 +2,7 @@ use v6;
 use ANTLR4::Grammar;
 use Test;
 
-plan 57;
+plan 56;
 
 my $parser = ANTLR4::Grammar.new;
 
