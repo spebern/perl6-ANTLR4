@@ -97,18 +97,26 @@ sub concatenation($ast --> Str) {
 };
 
 sub terminal($ast --> Str) {
-    my Str $translation = $ast<complemented> ?? '!' !! '';
-
     my Str $content;
     given $ast<content> {
         # '""' is a escaped quote
-        when q{'""'} { $content = q{'\"'}}
-        when q{'\r'} { $content = '\r' }
-        when q{'\n'} { $content = '\n' }
+        when q{'""'} { $content = q{'\"'} }
+        when q{'\r'} { $content = '\r'    }
+        when q{'\n'} { $content = '\n'    }
+        when q{'´´'} { $content = q{'\´'} }
+        when q{'`'}  { $content = q{'`'}  }
+        when q{'"'}  { $content = q{'"'}  }
         default      { $content = java-to-perl-utf8($_) }
     }
-
-    return $translation ~ modify($ast, $content) ~ json-info($ast, <options label commands>);
+    if $ast<complemented> {
+        $content ~~ s/^\'(.*?)\'$/$0/;
+        given $content {
+            when ']' { $content = '\]' }
+            when '[' { $content = '\[' }
+        }
+        $content = '<-[ ' ~ $content ~ ' ]>';
+    }
+    return modify($ast, $content) ~ json-info($ast, <options label commands>);
 };
 
 sub nonterminal($ast --> Str) {

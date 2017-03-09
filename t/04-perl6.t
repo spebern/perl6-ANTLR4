@@ -45,7 +45,7 @@ subtest sub {
            'plus';
 
         is g4-to-perl6( q{grammar Minimal; number : ~'1' ;}),
-           q{grammar Minimal { rule number { !'1' } }},
+           q{grammar Minimal { rule number { <-[ 1 ]> } }},
           'complement';
 
         is g4-to-perl6( q{grammar Minimal; number : '1'*? ;}),
@@ -255,17 +255,17 @@ subtest sub {
 
 subtest sub {
     is g4-to-perl6( q{grammar Minimal; number : <assoc=right> ~'1'+? ;}),
-       q{grammar Minimal { rule number { !'1'+? #={ "options" : [ { "assoc" : "right" } ] } } }},
+       q{grammar Minimal { rule number { <-[ 1 ]>+? #={ "options" : [ { "assoc" : "right" } ] } } }},
        'with option';
 
     is g4-to-perl6( q{grammar Minimal; number : ~'1'+? # One ;}),
-       q{grammar Minimal { rule number { !'1'+? #={ "label" : "One" } } }},
+       q{grammar Minimal { rule number { <-[ 1 ]>+? #={ "label" : "One" } } }},
        'with label';
 }, 'concatenated options';
 
 subtest sub {
     is g4-to-perl6( q{grammar Minimal; number : ~'1'+? -> skip ;}),
-       q{grammar Minimal { rule number { !'1'+? #={ "commands" : [ { "skip" : null } ] } } }},
+       q{grammar Minimal { rule number { <-[ 1 ]>+? #={ "commands" : [ { "skip" : null } ] } } }},
        'with complement';
 }, 'concatenated commands';
 
@@ -335,6 +335,23 @@ subtest sub {
     is g4-to-perl6(q{grammar CSV; STRING : '"' ('""'|~'"')* '"' ;}),
        q{grammar CSV { rule STRING { '"' ( '\"' | <-[ " ]> )* '"' } }},
        'complex quote escapes';
+
+    is g4-to-perl6(q{grammar CSV; STRING : '"' ('""'|~'"')* '"' ;}),
+       q{grammar CSV { rule STRING { '"' ( '\"' | <-[ " ]> )* '"' } }},
+       'complex quote escapes (1)';
+
+    my Str $sqlite-identifier = q{
+        grammar SQLite;
+        IDENTIFIER
+            : '"' (~'"' | '""')* '"'
+            | '`' (~'`' | '``')* '`'
+            | '[' ~']'* ']'
+            | [a-zA-Z_] [a-zA-Z_0-9]* // TODO check: needs more chars in set
+            ;
+    };
+    is g4-to-perl6($sqlite-identifier),
+       q{grammar SQLite { rule IDENTIFIER { '"' ( <-[ " ]> | '\"' )* '"' | '`' ( <-[ ` ]> | '``' )* '`' | '[' <-[ \] ]>* ']' | <[ a .. z A .. Z _ ]> <[ a .. z A .. Z _ 0 .. 9 ]>* } }},
+       'complex quote escapes (2)';
 
     is g4-to-perl6(q{grammar CSV; row : field (',' field)* '\r'? '\n' ;}),
        q{grammar CSV { rule row { ( <field>+ %% ',' ) \r? \n } }},

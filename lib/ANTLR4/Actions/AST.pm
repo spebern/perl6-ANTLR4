@@ -442,18 +442,9 @@ method setElement($/) {
         make $<LEXER_CHAR_SET>.made;
     }
     else {
-        my Str $content = $/.Str.trim;
-        if $content eq q{'"'} {
-            make {
-               type     => 'character class',
-               contents => [ '"' ],
-            }
-        }
-        else {
-            make {
-                type    => $<terminal><STRING_LITERAL> ?? 'terminal' !! 'nonterminal',
-                content => $content,
-            }
+        make {
+            type    => $<terminal><STRING_LITERAL> ?? 'terminal' !! 'nonterminal',
+            content => $/.Str.trim,
         }
     }
 }
