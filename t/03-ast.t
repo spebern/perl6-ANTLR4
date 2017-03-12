@@ -3,7 +3,7 @@ use ANTLR4::Grammar;
 use ANTLR4::Actions::AST;
 use Test;
 
-plan 1;
+plan 7;
 
 my $a = ANTLR4::Actions::AST.new;
 my $g = ANTLR4::Grammar.new;
@@ -14,13 +14,13 @@ my $g = ANTLR4::Grammar.new;
 #
 is-deeply
   $g.parse( q{grammar Minimal;}, :actions($a) ).ast,
-  { type     => 'DEFAULT',
+  { type     => Nil,
     name     => 'Minimal',
-    options  => [ ],
-    imports  => [ ],
-    tokens   => [ ],
-    actions  => [ ],
-    contents => [ ] },
+    rules    => [],
+    options  => (),
+    imports  => (),
+    tokens   => (),
+    actions  => ()}
   q{Minimal grammar};
 
 #
@@ -51,24 +51,24 @@ subtest sub {
 
       $parsed = $g.parse(
         q{grammar Name; options {a=2;}}, :actions($a) ).ast;
-      is-deeply $parsed.<options>, [ a => 2 ],
+      is-deeply $parsed.<options>, ( a => 2, ),
         q{Numeric option};
 
       $parsed = $g.parse(
         q{grammar Name; options {a='foo';}}, :actions($a) ).ast;
-      is-deeply $parsed.<options>, [ a => 'foo' ],
+      is-deeply $parsed.<options>, ( a => 'foo', ),
         q{String option};
 
       $parsed = $g.parse(
         q{grammar Name; options {a=b;}}, :actions($a) ).ast;
-      is-deeply $parsed.<options>, [ a => [ 'b' ] ],
+      is-deeply $parsed.<options>, ( a => [ 'b' ], ),
         q{Atomic option};
 
     }, q{Single option};
 
     $parsed = $g.parse(
       q{grammar Name; options {a=2;} options {b=3;}}, :actions($a) ).ast;
-    is-deeply $parsed.<options>, [ a => 2, b => 3 ],
+    is-deeply $parsed.<options>, ( a => 2, b => 3 ),
       q{Repeated single option};
 
     subtest sub {
@@ -78,12 +78,12 @@ subtest sub {
 
       $parsed = $g.parse(
         q{grammar Name; options {a=b,cde;}}, :actions($a) ).ast;
-      is-deeply $parsed.<options>, [ a => [ 'b', 'cde' ] ],
+      is-deeply $parsed.<options>, ( a => [ 'b', 'cde' ], ),
         q{Multiple atomic options};
 
       $parsed = $g.parse(
         q{grammar Name; options {a=b,cde;f='foo';}}, :actions($a) ).ast;
-      is-deeply $parsed.<options>, [ a => [ 'b', 'cde' ], f => 'foo' ],
+      is-deeply $parsed.<options>, ( a => [ 'b', 'cde' ], f => 'foo' ),
         q{Multiple mixed options};
     }, q{Multiple options};
 
@@ -96,7 +96,7 @@ subtest sub {
 
     $parsed = $g.parse(
       q{grammar Name; options {a=2;} import Foo;}, :actions($a) ).ast;
-    is-deeply $parsed.<imports>, [ Foo => Nil ],
+    is-deeply $parsed.<imports>, ( Foo => Nil, ),
       q{Single import};
 
     subtest sub {
@@ -107,13 +107,13 @@ subtest sub {
       $parsed = $g.parse(
         q{grammar Name; options {a=2;} import Foo,Bar;},
         :actions($a) ).ast;
-      is-deeply $parsed.<imports>, [ Foo => Nil, Bar => Nil ],
+      is-deeply $parsed.<imports>, ( Foo => Nil, Bar => Nil ),
         q{Two grammars};
 
       $parsed = $g.parse(
         q{grammar Name; options {a=2;} import Foo,Bar=Test;},
         :actions($a) ).ast;
-      is-deeply $parsed.<imports>, [ Foo => Nil, Bar => 'Test' ],
+      is-deeply $parsed.<imports>, ( Foo => Nil, Bar => 'Test' ),
         q{Two grammars, last aliased};
 
     }, q{Multiple imports};
@@ -128,13 +128,13 @@ subtest sub {
     $parsed = $g.parse(
       q{grammar Name; tokens { INDENT }},
       :actions($a) ).ast;
-    is-deeply $parsed.<tokens>, [ 'INDENT' ],
+    is-deeply $parsed.<tokens>, ( 'INDENT', ),
       q{Single token};
 
     $parsed = $g.parse(
       q{grammar Name; tokens { INDENT, DEDENT }},
       :actions($a) ).ast;
-    is-deeply $parsed.<tokens>, [ 'INDENT', 'DEDENT' ],
+    is-deeply $parsed.<tokens>, ( 'INDENT', 'DEDENT' ),
       q{Multiple tokens};
 
   }, q{Tokens};
@@ -148,7 +148,7 @@ subtest sub {
       q{grammar Name; @members { protected int curlies = 0; }},
       :actions($a) ).ast;
     is-deeply $parsed.<actions>,
-      [ '@members' => '{ protected int curlies = 0; }' ],
+      ( '@members' => '{ protected int curlies = 0; }', ),
       q{Single action};
 
     $parsed = $g.parse(
@@ -156,8 +156,8 @@ subtest sub {
         @members { protected int curlies = 0; }
         @sample::stuff { 1; }}, :actions($a) ).ast;
     is-deeply $parsed.<actions>,
-      [ '@members' => '{ protected int curlies = 0; }',
-        '@sample::stuff' => '{ 1; }' ],
+      ( '@members' => '{ protected int curlies = 0; }',
+        '@sample::stuff' => '{ 1; }' ),
       q{Multiple tokens};
 
   }, q{Actions};
@@ -168,38 +168,28 @@ is-deeply
   $g.parse(
     q{grammar Name; number : '1' ;},
     :actions($a) ).ast,
-  { type     => 'DEFAULT',
+  { type     => Nil,
     name     => 'Name',
-    options  => [ ],
-    imports  => [ ],
-    tokens   => [ ],
-    actions  => [ ],
-    contents =>
-      [${ type      => 'rule',
-          name      => 'number',
+    options  => (),
+    imports  => (),
+    tokens   => (),
+    actions  => (),
+    rules    =>
+      [${ name      => 'number',
           attribute => Nil,
           action    => Nil,
-          return    => Nil,
-          throws    => [ ],
-          local     => Nil,
-          options   => [ ],
-          contents  =>
-            [${ type     => 'alternation',
-                label    => Nil,
-                options  => [ ],
-                commands => [ ],
-                contents =>
-                  [${ type     => 'concatenation',
-                      label    => Nil,
-                      options  => [ ],
-                      commands => [ ],
-                      contents =>
-                        [${ type         => 'terminal',
-                            content      => '1',
-                            alias        => Nil,
-                            modifier     => Nil,
-                            greedy       => False,
-                            complemented => False }] }] }] }] },
+          returns   => Nil,
+          throws    => Nil,
+          locals    => Nil,
+          options   => Nil,
+          content   =>
+            ${ type     => 'terminal',
+               label    => Nil,
+               greedy   => False,
+               modifier => '',
+               options  => Nil,
+               # commands => (),
+               content  => "'1'", }}]},
   q{Single rule};
 
 subtest sub {
@@ -209,17 +199,17 @@ subtest sub {
 
   $parsed = $g.parse(
     q{grammar Name; number [int x] : '1' ;}, :actions($a) ).ast;
-  is-deeply $parsed.<contents>[0]<action>, '[int x]',
+  is-deeply $parsed.<rules>[0]<action>, '[int x]',
     q{Action};
 
   $parsed = $g.parse(
     q{grammar Name; protected number : '1' ;}, :actions($a) ).ast;
-  is-deeply $parsed.<contents>[0]<attribute>, 'protected',
+  is-deeply $parsed.<rules>[0]<attribute>, 'protected',
     q{Attribute};
 
   $parsed = $g.parse(
     q{grammar Name; number returns [int x] : '1' ;}, :actions($a) ).ast;
-  is-deeply $parsed.<contents>[0]<return>, '[int x]',
+  is-deeply $parsed.<rules>[0]<returns>, '[int x]',
     q{Returns};
 
   subtest sub {
@@ -229,24 +219,24 @@ subtest sub {
 
     $parsed = $g.parse(
       q{grammar Name; number throws XFoo : '1' ;}, :actions($a) ).ast;
-    is-deeply $parsed.<contents>[0]<throws>, [ 'XFoo' ],
+    is-deeply $parsed.<rules>[0]<throws>, [ 'XFoo' ],
       q{Single exception};
 
     $parsed = $g.parse(
       q{grammar Name; number throws XFoo, XBar : '1' ;}, :actions($a) ).ast;
-    is-deeply $parsed.<contents>[0]<throws>, [ 'XFoo', 'XBar' ],
+    is-deeply $parsed.<rules>[0]<throws>, [ 'XFoo', 'XBar' ],
       q{Multiple exceptions};
 
   }, q{Throws};
 
   $parsed = $g.parse(
     q{grammar Name; number locals [int x] : '1' ;}, :actions($a) ).ast;
-  is-deeply $parsed.<contents>[0]<local>, '[int x]',
+  is-deeply $parsed.<rules>[0]<locals>, '[int x]',
     q{Locals};
 
   $parsed = $g.parse(
     q{grammar Name; number options{a=2;} : '1' ;}, :actions($a) ).ast;
-  is-deeply $parsed.<contents>[0]<options>, [ a => 2 ],
+  is-deeply $parsed.<rules>[0]<options>, [ a => 2 ],
     q{Options};
 
 }, q{Rule-level keys};
@@ -260,17 +250,17 @@ subtest sub {
 
   $parsed = $g.parse(
     q{grammar Name; number : '1' ;}, :actions($a) ).ast;
-  is $parsed.<contents>[0]<contents>[0]<contents>[0]<type>, 'concatenation',
+  is $parsed<rules>[0]<content><type>, 'terminal',
     q{Type};
 
   $parsed = $g.parse(
     q{grammar Name; number : '1' # One ;}, :actions($a) ).ast;
-  is $parsed.<contents>[0]<contents>[0]<contents>[0]<label>, 'One',
+  is $parsed.<rules>[0]<content><label>, 'One',
     q{Label};
 
   $parsed = $g.parse(
     q{grammar Name; number : <assoc=right> '1' ;}, :actions($a) ).ast;
-  is-deeply $parsed.<contents>[0]<contents>[0]<contents>[0]<options>,
+  is-deeply $parsed.<rules>[0]<content><options>,
     [ assoc => 'right' ],
     q{Options};
 
@@ -281,83 +271,61 @@ subtest sub {
 is-deeply
   $g.parse(
     q{grammar Name; number : '1' -> channel(HIDDEN) ;},
-    :actions($a) ).ast,
-  { type     => 'DEFAULT',
+    :actions($a) ).ast<rules>[0]<content>,
+  { type     => Nil,
     name     => 'Name',
-    options  => [ ],
-    imports  => [ ],
-    tokens   => [ ],
-    actions  => [ ],
-    contents =>
-      [${ type      => 'rule',
-          name      => 'number',
+    options  => (),
+    imports  => (),
+    tokens   => (),
+    actions  => (),
+    rules    =>
+      [${ name      => 'number',
           attribute => Nil,
           action    => Nil,
-          return    => Nil,
-          throws    => [ ],
-          local     => Nil,
-          options   => [ ],
-          contents  =>
-            [${ type     => 'alternation',
-                label    => Nil,
-                options  => [ ],
-                commands => [ ],
-                contents =>
-                  [${ type     => 'concatenation',
-                      label    => Nil,
-                      options  => [ ],
-                      commands => [ channel => 'HIDDEN' ],
-                      contents =>
-                        [${ type         => 'terminal',
-                            content      => '1',
-                            alias        => Nil,
-                            modifier     => Nil,
-                            greedy       => False,
-                            complemented => False }] }] }] }] },
+          returns   => Nil,
+          throws    => Nil,
+          locals    => Nil,
+          options   => Nil,
+          content   =>
+            ${ type     => 'terminal',
+               greedy   => False,
+               modifier => '',
+               commands => [${channel => Nil}],
+               content  => "'1'", }}]}<rules>[0]<content>,
   q{Single lexer rule};
 
 is-deeply
   $g.parse(
     q{grammar Name; number : '1' {action++;} ;},
-    :actions($a) ).ast,
-  { type     => 'DEFAULT',
+    :actions($a) ).ast<rules>[0]<content>,
+  { type     => Nil,
     name     => 'Name',
-    options  => [ ],
-    imports  => [ ],
-    tokens   => [ ],
-    actions  => [ ],
-    contents =>
-      [${ type      => 'rule',
-          name      => 'number',
+    options  => (),
+    imports  => (),
+    tokens   => (),
+    actions  => (),
+    rules    =>
+      [${ name      => 'number',
           attribute => Nil,
           action    => Nil,
-          return    => Nil,
-          throws    => [ ],
-          local     => Nil,
-          options   => [ ],
-          contents  =>
-            [${ type     => 'alternation',
-                label    => Nil,
-                options  => [ ],
-                commands => [ ],
-                contents =>
-                  [${ type     => 'concatenation',
-                      label    => Nil,
-                      options  => [ ],
-                      commands => [ ],
-                      contents =>
-                        [{ type         => 'terminal',
-                           content      => '1',
-                           alias        => Nil,
-                           modifier     => Nil,
-                           greedy       => False,
-                           complemented => False },
-                         { type         => 'action',
-                           content      => '{action++;}',
-                           alias        => Nil,
-                           modifier     => Nil,
-                           greedy       => False,
-                           complemented => False }] }] }] }] },
+          returns   => Nil,
+          throws    => Nil,
+          locals    => Nil,
+          options   => Nil,
+          content   =>
+            ${ type     => 'concatenation',
+               label    => Nil,
+               options  => Nil,
+               contents => [
+                 ${ type     => 'terminal',
+                    greedy   => False,
+                    modifier => '',
+                    content  => "'1'", }
+                 ${ type     => 'action',
+                    greedy   => False,
+                    modifier => '',
+                    content  => '{action++;}', }
+               ]}}]}<rules>[0]<content>,
   q{Single rule with associated action};
 
 #`(
@@ -372,49 +340,30 @@ is-deeply
   $g.parse(
     q{grammar Name; number : ( '1' ) ;},
     :actions($a) ).ast,
-  { type     => 'DEFAULT',
+  { type     => Nil,
     name     => 'Name',
-    options  => [ ],
-    imports  => [ ],
-    tokens   => [ ],
-    actions  => [ ],
-    contents =>
-      [${ type      => 'rule',
-          name      => 'number',
-          attribute => [ ],
+    options  => (),
+    imports  => (),
+    tokens   => (),
+    actions  => (),
+    rules    =>
+      [${ name      => 'number',
+          attribute => Nil,
           action    => Nil,
-          return    => Nil,
-          throws    => [ ],
-          local     => Nil,
-          options   => [ ],
-          contents  =>
-            [${ type     => 'alternation',
-                label    => Nil,
-                options  => [ ],
-                commands => [ ],
-                contents =>
-                  [${ type      => 'concatenation',
-                       label    => Nil,
-                       options  => [ ],
-                       commands => [ ],
-                       contents =>
-                         [${ type         => 'capturing group',
-                              alias        => Nil,
-                              modifier     => Nil,
-                              greedy       => False,
-                              complemented => False,
-                              content =>
-                                [{ type     => 'concatenation',
-                                   label    => Nil,
-                                   options  => [ ],
-                                   commands => [ ],
-                                   content  =>
-                                     [${ type         => 'terminal',
-                                         content      => '1',
-                                         alias        => Nil,
-                                         modifier     => Nil,
-                                         greedy       => False,
-                                         complemented => False }] }] }] }] }] }] },
+          returns   => Nil,
+          throws    => Nil,
+          locals    => Nil,
+          options   => Nil,
+          content   =>
+            ${ type     => 'capturing group',
+               label    => Nil,
+               options  => Nil,
+               contents => [
+                 ${ type     => 'terminal',
+                    greedy   => False,
+                    modifier => '',
+                    content  => "'1'", }
+               ]}}]},
   q{Single rule with options and capturing group};
 
 is-deeply
