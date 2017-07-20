@@ -114,7 +114,7 @@ sub terminal($ast --> Str) {
             when ']' { $content = '\]' }
             when '[' { $content = '\[' }
         }
-        $content = '<-[ ' ~ $content ~ ' ]>';
+        $content = '<-[' ~ $content ~ ']>';
     }
     return modify($ast, $content) ~ json-info($ast, <options label commands>);
 };
@@ -137,7 +137,7 @@ sub range($ast --> Str) {
 sub character-class($ast --> Str) {
     my Str $translation = '<';
     $translation ~= '-' if $ast<complemented>;
-    $translation ~= '[ ';
+    $translation ~= '[';
 
     $translation ~= join ' ', map {
         if /^(.) '-' (.)/ {
@@ -160,7 +160,7 @@ sub character-class($ast --> Str) {
         }
     }, $ast<contents>.flat;
 
-    $translation ~= ' ]>';
+    $translation ~= ']>';
 
     return modify($ast, $translation);
 };
@@ -178,7 +178,7 @@ sub capturing-group($ast --> Str) {
 
     my Str $group = term($ast<content>);
     
-    $translation ~= qq{( $group )};
+    $translation ~= qq{($group)};
     return modify($ast, $translation);
 }
 

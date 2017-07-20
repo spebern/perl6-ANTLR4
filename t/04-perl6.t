@@ -45,7 +45,7 @@ subtest sub {
            'plus';
 
         is g4-to-perl6( q{grammar Minimal; number : ~'1' ;}),
-           q{grammar Minimal { rule number { <-[ 1 ]> } }},
+           q{grammar Minimal { rule number { <-[1]> } }},
           'complement';
 
         is g4-to-perl6( q{grammar Minimal; number : '1'*? ;}),
@@ -164,64 +164,64 @@ subtest sub {
     }, 'range modifiers';
 
     is g4-to-perl6( q{grammar Minimal; number : [] ;}),
-       q{grammar Minimal { rule number { <[  ]> } }},
+       q{grammar Minimal { rule number { <[]> } }},
        'empty character class';
 
     subtest sub {
         is g4-to-perl6( q{grammar Minimal; number : []* ;}),
-           q{grammar Minimal { rule number { <[  ]>* } }},
+           q{grammar Minimal { rule number { <[]>* } }},
            'star';
 
         is g4-to-perl6( q{grammar Minimal; number : []+ ;}),
-           q{grammar Minimal { rule number { <[  ]>+ } }},
+           q{grammar Minimal { rule number { <[]>+ } }},
            'plus';
 
         is g4-to-perl6( q{grammar Minimal; number : ~[] ;}),
-           q{grammar Minimal { rule number { <-[  ]> } }},
+           q{grammar Minimal { rule number { <-[]> } }},
            'complement';
 
         is g4-to-perl6( q{grammar Minimal; number : []*? ;}),
-           q{grammar Minimal { rule number { <[  ]>*? } }},
+           q{grammar Minimal { rule number { <[]>*? } }},
            'greedy star';
     }, 'empty character class modifiers';
 
     is g4-to-perl6( q{grammar Minimal; number : [a] ;}),
-       q{grammar Minimal { rule number { <[ a ]> } }},
+       q{grammar Minimal { rule number { <[a]> } }},
        'character class';
 
     is g4-to-perl6( q{grammar Minimal; number : [ ] ;}),
-       q{grammar Minimal { rule number { <[ \s ]> } }},
+       q{grammar Minimal { rule number { <[\s]> } }},
        'character class';
 
     subtest sub {
         is g4-to-perl6( q{grammar Minimal; number : [a]* ;}),
-           q{grammar Minimal { rule number { <[ a ]>* } }},
+           q{grammar Minimal { rule number { <[a]>* } }},
            'star';
 
         is g4-to-perl6( q{grammar Minimal; number : [a]+ ;}),
-           q{grammar Minimal { rule number { <[ a ]>+ } }},
+           q{grammar Minimal { rule number { <[a]>+ } }},
            'plus';
 
         is g4-to-perl6( q{grammar Minimal; number : ~[a] ;}),
-           q{grammar Minimal { rule number { <-[ a ]> } }},
+           q{grammar Minimal { rule number { <-[a]> } }},
            'complement';
 
         is g4-to-perl6( q{grammar Minimal; number : [a]*? ;}),
-           q{grammar Minimal { rule number { <[ a ]>*? } }},
+           q{grammar Minimal { rule number { <[a]>*? } }},
            'greedy star';
     }, 'character class modifiers';
 
     subtest sub {
         is g4-to-perl6( q{grammar Minimal; number : [a-b] ;}),
-           q{grammar Minimal { rule number { <[ a .. b ]> } }},
+           q{grammar Minimal { rule number { <[a .. b]> } }},
            'hyphenated character class';
 
         is g4-to-perl6( q{grammar Minimal; number : [-a-b] ;}),
-           q{grammar Minimal { rule number { <[ - a .. b ]> } }},
+           q{grammar Minimal { rule number { <[- a .. b]> } }},
            'hyphenated character class';
 
         is g4-to-perl6( q{grammar Minimal; number : [-a-b\u000d] ;}),
-           q{grammar Minimal { rule number { <[ - a .. b \\x[000d] ]> } }},
+           q{grammar Minimal { rule number { <[- a .. b \\x[000d]]> } }},
            'Unicode character class';
     }, 'character class variants';
 
@@ -255,31 +255,31 @@ subtest sub {
 
 subtest sub {
     is g4-to-perl6( q{grammar Minimal; number : <assoc=right> ~'1'+? ;}),
-       q{grammar Minimal { rule number { <-[ 1 ]>+? #={ "options" : [ { "assoc" : "right" } ] } } }},
+       q{grammar Minimal { rule number { <-[1]>+? #={ "options" : [ { "assoc" : "right" } ] } } }},
        'with option';
 
     is g4-to-perl6( q{grammar Minimal; number : ~'1'+? # One ;}),
-       q{grammar Minimal { rule number { <-[ 1 ]>+? #={ "label" : "One" } } }},
+       q{grammar Minimal { rule number { <-[1]>+? #={ "label" : "One" } } }},
        'with label';
 }, 'concatenated options';
 
 subtest sub {
     is g4-to-perl6( q{grammar Minimal; number : ~'1'+? -> skip ;}),
-       q{grammar Minimal { rule number { <-[ 1 ]>+? #={ "commands" : [ { "skip" : null } ] } } }},
+       q{grammar Minimal { rule number { <-[1]>+? #={ "commands" : [ { "skip" : null } ] } } }},
        'with complement';
 }, 'concatenated commands';
 
 subtest sub {
     is g4-to-perl6( q{grammar Minimal; number : ( '1' ) ;}),
-       q{grammar Minimal { rule number { ( '1' ) } }},
+       q{grammar Minimal { rule number { ('1') } }},
        'redundant parenthesis';
 
     is g4-to-perl6( q{grammar Minimal; number : ( '1' '2' ) ;}),
-       q{grammar Minimal { rule number { ( '1' '2' ) } }},
+       q{grammar Minimal { rule number { ('1' '2') } }},
        'redundant parenthesis with two terms';
 
     is g4-to-perl6( q{grammar Minimal; number : ( '1' | '2' ) ;}),
-       q{grammar Minimal { rule number { ( '1' | '2' ) } }},
+       q{grammar Minimal { rule number { ('1' | '2') } }},
        'redundant parenthesis with two terms';
 }, 'rule with redundant parentheses';
 
@@ -290,7 +290,7 @@ subtest sub {
         number : ( '1' ) ;
     };
     is g4-to-perl6( q{grammar Minimal; number : ( '1' ) ;}),
-       q{grammar Minimal { rule number { ( '1' ) } }},
+       q{grammar Minimal { rule number { ('1') } }},
        'blank line with with comment';
 
     is g4-to-perl6( q{grammar Minimal; number : '1' ; // line comment }),
@@ -318,7 +318,7 @@ subtest sub {
             ;
     };
     is g4-to-perl6($character-class-with-space),
-       q{grammar JSON { rule WS { <[ \s \t \n \r ]>+ } }},
+       q{grammar JSON { rule WS { <[\s \t \n \r]>+ } }},
        'char class with space';
 
     my Str $repetition = q{
@@ -333,11 +333,11 @@ subtest sub {
        'repetition (generate "%%")';
 
     is g4-to-perl6(q{grammar CSV; STRING : '"' ('""'|~'"')* '"' ;}),
-       q{grammar CSV { rule STRING { '"' ( '\"' | <-[ " ]> )* '"' } }},
+       q{grammar CSV { rule STRING { '"' ('\"' | <-["]>)* '"' } }},
        'complex quote escapes';
 
     is g4-to-perl6(q{grammar CSV; STRING : '"' ('""'|~'"')* '"' ;}),
-       q{grammar CSV { rule STRING { '"' ( '\"' | <-[ " ]> )* '"' } }},
+       q{grammar CSV { rule STRING { '"' ('\"' | <-["]>)* '"' } }},
        'complex quote escapes (1)';
 
     my Str $sqlite-identifier = q{
@@ -350,7 +350,7 @@ subtest sub {
             ;
     };
     is g4-to-perl6($sqlite-identifier),
-       q{grammar SQLite { rule IDENTIFIER { '"' ( <-[ " ]> | '\"' )* '"' | '`' ( <-[ ` ]> | '``' )* '`' | '[' <-[ \] ]>* ']' | <[ a .. z A .. Z _ ]> <[ a .. z A .. Z _ 0 .. 9 ]>* } }},
+       q{grammar SQLite { rule IDENTIFIER { '"' (<-["]> | '\"')* '"' | '`' (<-[`]> | '``')* '`' | '[' <-[\]]>* ']' | <[a .. z A .. Z _]> <[a .. z A .. Z _ 0 .. 9]>* } }},
        'complex quote escapes (2)';
 
     is g4-to-perl6(q{grammar CSV; row : field (',' field)* '\r'? '\n' ;}),
@@ -358,7 +358,7 @@ subtest sub {
        'carriage return and newline';
 
     is g4-to-perl6(q{grammar Minimal; group : ~('0' .. '9'); }),
-       q{grammar Minimal { rule group { !( '0'..'9' ) } }},
+       q{grammar Minimal { rule group { !('0'..'9') } }},
        'negated capturing group';
 }, 'longer fragments';
 
