@@ -155,10 +155,11 @@ sub terminal($ast --> Str) {
         when q{'´´'} { $content = q{'\´'} }
         when q{'`'}  { $content = q{'`'}  }
         when q{'"'}  { $content = q{'"'}  }
+	when q{'\''} { $content = q{\' }  }
         default      { $content = java-to-perl-utf8($_) }
     }
     if $ast<complemented> {
-        $content ~~ s/^\'(.*?)\'$/$0/;
+        $content ~~ s/^\'(.*?)\'$/$0/; # ' repair sytanx highlighting
         given $content {
             when ']' { $content = '\]' }
             when '[' { $content = '\[' }
@@ -194,26 +195,47 @@ sub character-class($ast --> Str) {
     $translation ~= '-' if $ast<complemented>;
     $translation ~= '[';
 
-    $translation ~= join ' ', map {
-        if /^(.) '-' (.)/ {
-            qq{$0 .. $1};
+    $translation ~= join ' ', $ast<contents>.flat.map(-> $content {
+        if $content !~~ Str {
+	    if $content<type> eq 'character class' {
+                ~$content<contents>;
+            }
+            elsif $content<type> eq 'range' {
+	        term($content);
+            }
+            elsif $content<type> eq 'terminal' {
+                my $terminal = term($content);
+                if $terminal ~~ /^\'(.*?)\'$/ {
+		    $terminal = ~$0;
+		    if $terminal eq '[' | ']' {
+		        $terminal = '\\' ~ $terminal;
+                    }
+                }
+                $terminal;
+	    }
+            else {
+	        die "unsupported type '$content<type>' in character class";
+            }
+	}
+	elsif $content ~~ /^(.) '-' (.)/ {
+	    qq{$0 .. $1};
         }
-        elsif /^\\u(....) '-' \\u(....)/ {
+        elsif $content ~~ /^\\u(....) '-' \\u(....)/ {
             qq{\\x[$0] .. \\x[$1]};
         }
-        elsif /^\\u(....)/ {
+        elsif $content ~~ /^\\u(....)/ {
             qq{\\x[$0]};
         }
-        elsif /' '/ {
+        elsif $content ~~ /' '/ {
             q{' '};
         }
-        elsif /\\\-/ {
+        elsif $content ~~ /\\\-/ {
             q{-};
         }
         else {
-            $_;
+            $content;
         }
-    }, $ast<contents>.flat;
+    });
 
     $translation ~= ']>';
 

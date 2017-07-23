@@ -375,10 +375,33 @@ method lexerElement($/) {
 }
 
 method lexerBlock($/) {
-    make {
-        type         => 'capturing group',
-        content      =>  $<lexerAltList>.made,
-        complemented => $<NOT> ?? True !! False,
+    if $<NOT> {
+	# ignore me...
+	# there is a pretty good reason that there are no negated capturing classes...
+	# the reason for all this madness is the following antlr rule:
+	#SYMBOL_HEAD
+	#    : ~('0' .. '9'
+	#        | '^' | '`' | '\'' | '"' | '#' | '~' | '@' | ':' | '/' | '%' | '(' | ')' | '[' | ']' | '{' | '}' // FIXME: could be one group
+	#        | [ \n\r\t\,] // FIXME: could be WS
+	#        )
+	#    ;
+	my $lexer-alt-list = $<lexerAltList>.made;
+	my @contents = $lexer-alt-list<contents>:exists
+	    ?? $lexer-alt-list<contents>.flat
+            !! [$lexer-alt-list];
+
+	make {
+	    type         => 'character class',
+	    contents     =>  @contents,
+	    complemented => True,
+	}
+    }
+    else {
+	make {
+	    type         => 'capturing group',
+	    content      =>  $<lexerAltList>.made,
+	    complemented => $<NOT> ?? True !! False,
+	}
     }
 }
 
@@ -432,8 +455,8 @@ method LEXER_CHAR_SET_RANGE($/) {
 method range($/) {
     make {
         type => 'range',
-        from => ~$<from>,
-        to   => ~$<to>,
+        from => ~$<from>[0],
+        to   => ~$<to>[0],
     }
 }
 

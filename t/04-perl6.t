@@ -136,20 +136,20 @@ subtest sub {
     }, 'non-terminal modifiers';
 
     is g4-to-perl6( q{grammar Minimal; number : 'a'..'z' ;}),
-       q{grammar Minimal { token number { 'a'..'z' } }},
+       q{grammar Minimal { token number { a..z } }},
        'range';
 
     is g4-to-perl6( q{grammar Minimal; number : '\u263a'..'\u263f' ;}),
-       q{grammar Minimal { token number { '\x[263a]'..'\x[263f]' } }},
+       q{grammar Minimal { token number { \x[263a]..\x[263f] } }},
        'Unicode range';
 
     subtest sub {
         is g4-to-perl6( q{grammar Minimal; number : 'a'..'z'* ;}),
-           q{grammar Minimal { token number { 'a'..'z'* } }},
+           q{grammar Minimal { token number { a..z* } }},
            'star';
 
         is g4-to-perl6( q{grammar Minimal; number : 'a'..'z'+ ;}),
-           q{grammar Minimal { token number { 'a'..'z'+ } }},
+           q{grammar Minimal { token number { a..z+ } }},
            'plus';
         #
         # The grammar doesn't allow ~'a'..'z', so skip it.
@@ -159,7 +159,7 @@ subtest sub {
         #   'complement';
 
         is g4-to-perl6( q{grammar Minimal; number : 'a'..'z'*? ;}),
-           q{grammar Minimal { token number { 'a'..'z'*? } }},
+           q{grammar Minimal { token number { a..z*? } }},
            'greedy star';
     }, 'range modifiers';
 
@@ -354,7 +354,7 @@ subtest sub {
        'carriage return and newline';
 
     is g4-to-perl6(q{grammar Minimal; group : ~('0' .. '9'); }),
-       q{grammar Minimal { token group { !('0'..'9') } }},
+       q{grammar Minimal { token group { <-[0..9]> } }},
        'negated capturing group';
 
     is g4-to-perl6("grammar Smalltalk; script : sequence EOF;"),
@@ -364,6 +364,10 @@ subtest sub {
     is g4-to-perl6("grammar Clojure; TRASH : ( WS | COMMENT ) -> channel(HIDDEN);"),
         q{grammar Clojure { token ws { (<WS> | <COMMENT>)* } }},
         'ignore EOF token';
+
+    is g4-to-perl6( q{grammar Clojure;SYMBOL_HEAD : ~('0' .. '9' | '^' | '`' | '\'' | '"' | '#' | '~' | '@' | ':' | '/' | '%' | '(' | ')' | '[' | ']' | '{' | '}' | [ \n\r\t\,]);} ),
+        q{grammar Clojure { token SYMBOL_HEAD { <-[0..9 ^ ` \'  " # ~ @ : / % ( ) \[ \] { } \s \n \r \t \,]> } }},
+       'flatten content of negated character class';
 }, 'longer fragments';
 
 # vim: ft=perl6
