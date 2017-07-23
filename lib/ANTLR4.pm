@@ -52,6 +52,11 @@ sub alternation($ast --> Str) {
 sub concatenation($ast --> Str) {
     my Str $translation = '';
 
+    # empty string is '' in a perl6 grammar
+    if !$ast<contents>.elems {
+	return q{''} ~ json-info($ast, (<commands>, ));
+    }
+
     # this most likely has some errors in it
     # the idea is to use "%%"
     # value ( ',' value )* should become ( <value>+ %% ',' )
