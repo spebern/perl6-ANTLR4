@@ -28,15 +28,48 @@ sub java-to-perl-utf8(Str $utf8 is copy) {
     return $utf8;
 }
 
-sub rule($ast --> Str) {
-    my Str $rule = '';
+sub rules($ast) {
+    my Str ($ws-token-content, $ws-token-json-info);
+    my Str @rule-bodies;
+    for $ast<rules>.flat -> $rule-ast {
+	my Str $translation = join ' ', term($rule-ast<content>);
 
-    my Str $translation = join ' ', term($ast<content>);
-    $rule = qq{rule $ast<name> { $translation }};
+	my @commands = $rule-ast<content><commands>».keys.flat || do {
+	    my $command-info = $rule-ast<content><contents>.first( { $_ ~~ Hash and $_<commands>:exists; } );
+	    $command-info<commands>».keys.flat;
+	};
 
-    $rule ~= json-info($ast, <attribute action returns throws locals options>);
+	# in ANTLR4 the "skip" command makes it possible for the lexer to skip
+	# the elements described inside that rule/token
+	if 'skip' ~~ any(@commands) {
+	    # the "token ws" is inserted between every element inside a rule
+	    # a "+"-modifier makes the white space required, but it needs to
+	    # be optional, thus the modifier needs to be changed to a "*"
+	    $translation ~~ s/\+$/\*/;
+	    if $ws-token-content {
+		$ws-token-content ~= " | $translation";
+	    }
+	    else {
+		$ws-token-content = $translation;
+	    }
+	    next;
+	}
+	my $rule-body = qq{$rule-ast<name> { $translation }}
+	    ~ json-info($rule-ast, <attribute action returns throws locals options>);;
 
-    return $rule;
+	@rule-bodies.append($rule-body);
+    }
+
+    my Str @rules;
+    if $ws-token-content {
+	@rules = map { "rule $_" }, @rule-bodies;
+	@rules.append("token ws \{ $ws-token-content \}");
+    }
+    else {
+	@rules = map { "token $_" }, @rule-bodies;
+    }
+
+    return @rules;
 }
 
 sub modify($ast, $term is copy --> Str) {
@@ -241,7 +274,7 @@ sub json-info($ast, @keys --> Str) {
 sub ast($ast --> Str) {
     my Str $rules = '';
     # $rules = join ' ', map { rule($_) }, $ast<rules>.flat;
-    $rules = join "\n", map { rule($_) }, $ast<rules>.flat;
+    $rules = join "\n", rules($ast);
 
     my Str $grammar = qq{grammar $ast<name> { $rules }};
     $grammar ~= json-info($ast, <type options imports tokens actions>);
