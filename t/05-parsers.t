@@ -2,7 +2,7 @@ use v6;
 use Test;
 use ANTLR4;
 
-plan 2;
+plan 3;
 
 my @grammars-to-test = [
     {
@@ -14,6 +14,11 @@ my @grammars-to-test = [
 	name             => 'CSV',
 	token-top        => 'file',
 	test-file-ending => 'csv',
+    },
+    {
+	name             => 'fasta',
+	token-top        => 'sequence',
+	test-file-ending => 'fasta',
     },
 ];
 
