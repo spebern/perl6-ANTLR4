@@ -159,6 +159,12 @@ sub nonterminal($ast --> Str) {
     my $translation = '<';
     $translation ~= '!' if $ast<complemented>;
     $translation ~= $ast<content> ~ '>';
+
+    # EOF rule is not needed in perl6
+    if $translation eq '<EOF>' {
+	return '#={<EOF>}';
+    }
+
     return modify($ast, $translation);
 };
 

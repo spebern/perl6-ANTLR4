@@ -356,6 +356,10 @@ subtest sub {
     is g4-to-perl6(q{grammar Minimal; group : ~('0' .. '9'); }),
        q{grammar Minimal { token group { !('0'..'9') } }},
        'negated capturing group';
+
+    is g4-to-perl6("grammar Smalltalk; script : sequence EOF;"),
+        q{grammar Smalltalk { token script { <sequence> #={<EOF>} } }},
+        'ignore EOF token';
 }, 'longer fragments';
 
 # vim: ft=perl6
