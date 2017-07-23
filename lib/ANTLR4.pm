@@ -83,7 +83,7 @@ sub alternation($ast --> Str) {
 }
 
 sub concatenation($ast --> Str) {
-    my Str $translation = '';
+    my $translation = '';
 
     # empty string is '' in a perl6 grammar
     if !$ast<contents>.elems {
@@ -94,12 +94,12 @@ sub concatenation($ast --> Str) {
     # the idea is to use "%%"
     # value ( ',' value )* should become ( <value>+ %% ',' )
     # this eases the use of the generated grammar
-    my Int $i = 0;
+    my $i = 0;
     while $i < $ast<contents>.elems {
         my $content = $ast<contents>[$i];
 
         if $content<type> eq 'terminal' | 'nonterminal' {
-            my Str $content-translation = term($content);
+            my $content-translation = term($content);
 
             my $next-content = ++$i < $ast<contents>.elems ?? $ast<contents>[$i] !! Nil;
 
@@ -156,22 +156,22 @@ sub terminal($ast --> Str) {
 };
 
 sub nonterminal($ast --> Str) {
-    my Str $translation = '<';
+    my $translation = '<';
     $translation ~= '!' if $ast<complemented>;
     $translation ~= $ast<content> ~ '>';
     return modify($ast, $translation);
 };
 
 sub range($ast --> Str) {
-    my Str $translation = '';
+    my $translation = '';
     $translation ~= '!' if $ast<complemented>;
-    my Str ($from, $to) = ($ast<from>, $ast<to>).map({ java-to-perl-utf8($_) });
+    my ($from, $to) = ($ast<from>, $ast<to>).map({ java-to-perl-utf8($_) });
     $translation ~= qq{$from..$to};
     return modify($ast, $translation);
 };
 
 sub character-class($ast --> Str) {
-    my Str $translation = '<';
+    my $translation = '<';
     $translation ~= '-' if $ast<complemented>;
     $translation ~= '[';
 
@@ -202,17 +202,17 @@ sub character-class($ast --> Str) {
 };
 
 sub regular-expression($ast --> Str) {
-    my Str $translation = '';
+    my $translation = '';
     $translation ~= '!' if $ast<complemented>;
     $translation ~= $ast<content>;
     return modify($ast, $translation);
 };
 
 sub capturing-group($ast --> Str) {
-    my Str $translation = '';
+    my $translation = '';
     $translation ~= '!' if $ast<complemented>;
 
-    my Str $group = term($ast<content>);
+    my $group = term($ast<content>);
     
     $translation ~= qq{($group)};
     return modify($ast, $translation);
@@ -223,7 +223,7 @@ sub action($ast --> Str) {
 }
 
 sub term($ast --> Str) {
-    my Str $translation = '';
+    my $translation = '';
 
     given $ast<type> {
         when 'alternation' {
