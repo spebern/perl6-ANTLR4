@@ -32,7 +32,10 @@ for @grammars-to-test -> $grammar-to-test {
 
 	    my $test-file-ending = $grammar-to-test<test-file-ending>;
 	    my $parser-test-input = "$test-files-dir/{$grammar-name}_example.$test-file-ending".IO.slurp;
-	    isnt Nil, EVAL("$grammar-name" ~ ".parse('$parser-test-input')"), "test-file parsing";
+
+	    # TODO: this most likely is not the nicest way..., BUT it works
+	    my $parse-func = EVAL('sub (Str $input) {' ~ $grammar-name ~ '.parse($input) }');
+	    isnt Nil, $parse-func($parser-test-input), "test-file parsing";
 	}
 	else {
 	    skip "syntax of translated grammar $grammar-name is broken";
