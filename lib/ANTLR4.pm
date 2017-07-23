@@ -99,8 +99,6 @@ sub concatenation($ast --> Str) {
 sub terminal($ast --> Str) {
     my Str $content;
     given $ast<content> {
-        # '""' is a escaped quote
-        when q{'""'} { $content = q{'\"'} }
         when q{'\r'} { $content = '\r'    }
         when q{'\n'} { $content = '\n'    }
         when q{'´´'} { $content = q{'\´'} }
