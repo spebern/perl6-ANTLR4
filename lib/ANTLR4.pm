@@ -273,7 +273,6 @@ sub json-info($ast, @keys --> Str) {
 
 sub ast($ast --> Str) {
     my Str $rules = '';
-    # $rules = join ' ', map { rule($_) }, $ast<rules>.flat;
     $rules = join "\n", rules($ast);
 
     my Str $grammar = qq{grammar $ast<name> { $rules }};
