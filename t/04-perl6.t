@@ -103,7 +103,7 @@ subtest sub {
            'optional label';
 
         is g4-to-perl6( q{grammar Minimal; number : '1' -> skip ;}),
-           q{grammar Minimal { token ws { '1' #={ "commands" : [ { "skip" : null } ] } } }},
+           q{grammar Minimal { token ws { ('1' #={ "commands" : [ { "skip" : null } ] })* } }},
            'optional command';
 
         is g4-to-perl6( q{grammar Minimal; number : {$amount = 0;} '1' ;}),
@@ -236,7 +236,7 @@ subtest sub {
        q{grammar Minimal { token number { 'a' 'b' } }},
        'two concatenated terms';
     is g4-to-perl6( q{grammar Minimal; number : 'a' 'b' -> skip ;}),
-       q{grammar Minimal { token ws { 'a' 'b' #={ "commands" : [ { "skip" : null } ] } } }},
+       q{grammar Minimal { token ws { ('a' 'b' #={ "commands" : [ { "skip" : null } ] })* } }},
        'two concatenated terms with skipping';
 }, 'concatenation test';
 
@@ -249,7 +249,7 @@ subtest sub {
        q{grammar Minimal { token number { 'a' | 'b' } }},
        'two alternated terms';
     is g4-to-perl6( q{grammar Minimal; number : 'a' | 'b' -> skip ;}),
-       q{grammar Minimal { token ws { 'a' | 'b' #={ "commands" : [ { "skip" : null } ] } } }},
+       q{grammar Minimal { token ws { ('a' | 'b' #={ "commands" : [ { "skip" : null } ] })* } }},
        'two alternated terms with skipping';
 }, 'alternation test';
 
@@ -265,7 +265,7 @@ subtest sub {
 
 subtest sub {
     is g4-to-perl6( q{grammar Minimal; number : ~'1'+? -> skip ;}),
-       q{grammar Minimal { token ws { <-[1]>+? #={ "commands" : [ { "skip" : null } ] } } }},
+       q{grammar Minimal { token ws { (<-[1]>+? #={ "commands" : [ { "skip" : null } ] })* } }},
        'with complement';
 }, 'concatenated commands';
 
@@ -318,7 +318,7 @@ subtest sub {
             ;
     };
     is g4-to-perl6($character-class-with-space),
-       q{grammar JSON { token ws { <[\s \t \n \r]>* } }},
+       q{grammar JSON { token ws { (<[\s \t \n \r]>+)* } }},
        'char class with space';
 
     my Str $repetition = q{
@@ -359,6 +359,10 @@ subtest sub {
 
     is g4-to-perl6("grammar Smalltalk; script : sequence EOF;"),
         q{grammar Smalltalk { token script { <sequence> #={<EOF>} } }},
+        'ignore EOF token';
+
+    is g4-to-perl6("grammar Clojure; TRASH : ( WS | COMMENT ) -> channel(HIDDEN);"),
+        q{grammar Clojure { token ws { (<WS> | <COMMENT>)* } }},
         'ignore EOF token';
 }, 'longer fragments';
 

@@ -34,23 +34,26 @@ sub rules($ast) {
     for $ast<rules>.flat -> $rule-ast {
 	my Str $translation = join ' ', term($rule-ast<content>);
 
-	my @commands = $rule-ast<content><commands>».keys.flat || do {
+	my @commands = ($rule-ast<content><commands> || do {
 	    my $command-info = $rule-ast<content><contents>.first( { $_ ~~ Hash and $_<commands>:exists; } );
-	    $command-info<commands>».keys.flat;
-	};
+	    $command-info<commands>
+	}).flat;
 
 	# in ANTLR4 the "skip" command makes it possible for the lexer to skip
 	# the elements described inside that rule/token
-	if 'skip' ~~ any(@commands) {
-	    # the "token ws" is inserted between every element inside a rule
-	    # a "+"-modifier makes the white space required, but it needs to
-	    # be optional, thus the modifier needs to be changed to a "*"
-	    $translation ~~ s/\+$/\*/;
+	# "-> channel(HIDDEN)" will also be skipped by the lexer
+	if 'skip' ~~ any(@commands».keys.flat) or
+	   'hidden' ~~ any(@commands.grep({ $_<channel>:exists }).map({ lc $_<channel> })) {
 	    if $ws-token-content {
-		$ws-token-content ~= " | $translation";
+		$ws-token-content ~~ s/\)$/ \| $translation/;
 	    }
 	    else {
-		$ws-token-content = $translation;
+		if $translation.starts-with('(') and $translation.ends-with(')') {
+		    $ws-token-content = $translation;
+		}
+		else {
+		    $ws-token-content = "($translation)";
+		}
 	    }
 	    next;
 	}
@@ -63,6 +66,16 @@ sub rules($ast) {
     my Str @rules;
     if $ws-token-content {
 	@rules = map { "rule $_" }, @rule-bodies;
+
+	# the "token ws" is inserted between every element inside a rule
+	# a "+"-modifier makes the white space required, but it needs to
+	# be optional, thus the modifier needs to be changed to a "*"
+	if $ws-token-content.ends-with('+') {
+	    $ws-token-content ~~ s/\+$/\*/;
+	}
+	else {
+	    $ws-token-content ~= '*';
+	}
 	@rules.append("token ws \{ $ws-token-content \}");
     }
     else {

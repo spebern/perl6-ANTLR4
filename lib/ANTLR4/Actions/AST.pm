@@ -278,7 +278,7 @@ method lexerCommands($/) {
 }
 
 method lexerCommand($/) {
-    make { ~$<ID> => Nil };
+    make { ~$<ID> => $/<lexerCommandExpr>[0] ~~ Nil ?? Nil !! ~$/<lexerCommandExpr>[0] };
 }
 
 method parserAlt($/) {
