@@ -136,7 +136,7 @@ token ACTION_CHAR_LITERAL
 
 #
 # mode ArgAction; # E.g., [int x, List<String> a[]]
-# 
+#
 token ARG_ACTION
 	{
 	'[' <-[ \\ \x[5d]]>* ']'
@@ -166,8 +166,8 @@ token LEXER_CHAR_SET
 
 #
 #  The main entry point for parsing a v4 grammar.
-# 
-rule TOP 
+#
+rule TOP
 	{
 	<BLANK_LINE>*
 	<type=grammarType> <name=ID> ';'
@@ -191,13 +191,13 @@ rule prequelConstruct
 	|	<tokens=tokensSpec>
 	|	<actions=action>
  	}
- 
+
 #  A list of options that affect analysis and/or code generation
 
 rule optionsSpec
 	{
 	'options' '{' <option>* '}'
-	} 
+	}
 
 rule option
 	{
@@ -219,17 +219,17 @@ rule optionValue
  	|	<scalar=ACTION>
  	|	<scalar=DIGITS>
  	}
- 
+
 rule delegateGrammars
  	{
 	'import' <delegateGrammar>+ % ',' ';'
  	}
- 
+
 rule delegateGrammar
  	{
 	<key=ID> ['=' <value=ID>]?
  	}
- 
+
 rule ID_list_trailing_comma
 	{
 	<ID>+ %% ','
@@ -239,33 +239,33 @@ rule tokensSpec
  	{
 	<COMMENTS>? 'tokens' '{' <ID_list_trailing_comma> '}'
  	}
- 
+
 #  Match stuff like @parser::members {int i;}
 
 token action_name
  	{
 	'@' ( :!sigspace <actionScopeName> '::')? <ID>
 	}
- 
+
 rule action
  	{
 	<action_name> <ACTION>
  	}
- 
+
 #  Sometimes the scope names will collide with keywords; allow them as
 #  ids for action scopes.
- 
+
 token actionScopeName
  	{	<ID>
  	|	'lexer'
  	|	'parser'
  	}
- 
+
 rule modeSpec
  	{
 	<COMMENTS>? 'mode' <ID> ';' <lexerRuleSpec>*
  	}
- 
+
 rule ruleSpec
  	{	<parserRuleSpec>
  	|	<lexerRuleSpec>
@@ -286,51 +286,51 @@ rule parserRuleSpec
 	';'
 	<COMMENTS>? <exceptionGroup>
  	}
- 
+
 rule exceptionGroup
  	{
 	<exceptionHandler>* <finallyClause>?
  	}
- 
+
 rule exceptionHandler
  	{
 	'catch' <ARG_ACTION> <ACTION>
  	}
- 
+
 rule finallyClause
  	{
 	'finally' <ACTION>
  	}
- 
+
 rule ruleReturns
  	{
 	'returns' <ARG_ACTION>
  	}
- 
+
 rule throwsSpec
  	{
 	'throws' <ID>+ % ','
  	}
- 
+
 rule localsSpec
  	{
 	'locals' <ARG_ACTION>
  	}
- 
+
 #  An individual access modifier for a rule. The 'fragment' modifier
 #  is an internal indication for lexer rules that they do not match
 #  from the input but are like subroutines for other lexer rules to
 #  reuse for certain lexical patterns. The other modifiers are passed
 #  to the code generation templates and may be ignored by the template
 #  if they are of no use in that language.
- 
+
 token ruleAttribute
  	{	'public'
  	|	'private'
  	|	'protected'
  	|	'fragment'
  	}
- 
+
 #
 # ('a' | ) # Trailing empty alternative is allowed in sample code
 #
@@ -338,12 +338,12 @@ rule parserAltList
 	{
 	<parserAlt>+ % '|'
 	}
- 
+
 rule parserAlt
  	{
 	<parserElement> <COMMENTS>? ['#' <label=ID> <COMMENTS>?]?
  	}
- 
+
 token FRAGMENT
 	{
 	'fragment'
@@ -357,24 +357,24 @@ rule lexerRuleSpec
 	<COMMENTS>? ';'
 	<COMMENTS>?
  	}
- 
+
 rule lexerAltList
 	{
 	<lexerAlt>+ %% '|'
 	}
- 
+
 rule lexerAlt
  	{
 	<COMMENTS>? <lexerElement>+ <lexerCommands>? <COMMENTS>? | ''
  	}
- 
+
 rule lexerElement
  	{	<labeledLexerElement> <ebnfSuffix>?
  	|	<lexerAtom> <ebnfSuffix>?
  	|	<lexerBlock> <ebnfSuffix>?
  	|	<ACTION> '?'?
  	}
- 
+
 rule labeledLexerElement
  	{
 	<ID> ['=' | '+=']
@@ -382,14 +382,14 @@ rule labeledLexerElement
  		|	<block>
  		]
  	}
- 
+
 rule lexerBlock
  	{
 	<NOT>? '(' <COMMENTS>? <lexerAltList>? ')'
  	}
- 
+
 #  E.g., channel(HIDDEN), skip, more, mode(INSIDE), push(INSIDE), pop
- 
+
 rule lexerCommands
  	{
 	'->' <lexerCommand>+ % ','
@@ -404,24 +404,24 @@ rule lexerCommandExpr
 	{
 	'(' (<ID> | <DIGITS>) ')'
 	}
- 
+
 rule blockAltList
 	{
 	<parserElement>+ % '|'
 	}
- 
+
 rule parserElement
  	{
 	<options=elementOptions>? <element>*
  	}
- 
+
 rule element
  	{	<labeledElement> <ebnfSuffix>?
  	|	<atom> <ebnfSuffix>?
  	|	<ebnf>
  	|	<ACTION> '?'? <COMMENTS>?
  	}
- 
+
 rule labeledElement
  	{
 	<ID> ['=' | '+=']
@@ -429,7 +429,7 @@ rule labeledElement
  		|	<block>
  		]
  	}
- 
+
 rule ebnf
 	{
 	<block> <ebnfSuffix>?
@@ -445,12 +445,12 @@ token GREED
 	{
 	'?'
 	}
- 
+
 token ebnfSuffix
  	{
 	<MODIFIER> <GREED>?
  	}
- 
+
 rule lexerAtom
  	{	<range>
  	|	<terminal>
@@ -464,7 +464,7 @@ token DOT
 	{
 	'.'
 	}
- 
+
 rule atom
  	{	<range>
  	|	<terminal>
@@ -472,12 +472,12 @@ rule atom
  	|	<notSet>
  	|	<DOT> <elementOptions>?
  	}
- 
+
 rule notSet
  	{
 	'~' [<setElement> | <blockSet>]
  	}
- 
+
 rule setElementAltList
 	{
 	<setElement>+ % '|'
@@ -487,37 +487,37 @@ rule blockSet
 	{
 	'(' <setElementAltList> ')' <COMMENTS>?
 	}
- 
+
 rule setElement
 	{	<terminal>
  	|	<range>
  	|	<LEXER_CHAR_SET>
  	}
- 
+
 rule block
  	{
 	'(' [ <optionsSpec>? ':' ]? <blockAltList> <COMMENTS>? ')'
 	}
- 
+
 rule ruleref
  	{
 	<ID> <ARG_ACTION>? <elementOptions>?
- 	} 
+ 	}
 rule range
 	{
 	<from=STRING_LITERAL> '..' <to=STRING_LITERAL>
  	}
- 
+
 rule terminal
 	{
 	[<scalar=ID> | <scalar=STRING_LITERAL>] <elementOptions>?
 	}
- 
+
 rule elementOptions
  	{
 	'<' <option=elementOption>+ % ',' '>'
  	}
- 
+
 rule elementOption
 	{
 	<key=ID> ['=' [<value=ID> | <value=STRING_LITERAL>] ]?

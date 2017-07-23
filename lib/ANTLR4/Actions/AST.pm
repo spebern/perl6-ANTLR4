@@ -92,7 +92,7 @@ most complex, and is described in detail at the appropriate place.
   C<attribute>, C<action>, C<return> and C<throws> are useful for the Java
   author to restrict visibiity of the rule, and add additional arguments to the
   Java method that is called by the generated parser.
-  
+
   The real fun begins inside the C<contents> key. Even a simple ANTLR4 rule
   such as C<number : digits ;> will have several layers of what looks like
   redundant nesting. This is mostly for consistency's sake, and might change
@@ -117,7 +117,7 @@ most complex, and is described in detail at the appropriate place.
   C<digits>. Each term has a C<type>, C<contents>, C<modifier>, C<greedy> and
   C<complemented> key.
 
-  The C<type> is one of C<terminal>, C<nonterminal> or C<character class>. 
+  The C<type> is one of C<terminal>, C<nonterminal> or C<character class>.
   The contents is the actual text of the term (such as C<foo> if the term is
   C<'foo'>, or the individual "characters" of the character class.
 
@@ -322,7 +322,7 @@ method element($/) {
             type    => 'action',
             content => ~$<ACTION>,
         }
-    } 
+    }
     elsif $<ebnf><block> {
         make $<ebnf><block>.made;
     }
@@ -360,7 +360,7 @@ method atom($/) {
 }
 
 method lexerElement($/) {
-    my Str $modifier = $<ebnfSuffix><MODIFIER> ?? ~$<ebnfSuffix><MODIFIER> !! ''; 
+    my Str $modifier = $<ebnfSuffix><MODIFIER> ?? ~$<ebnfSuffix><MODIFIER> !! '';
     my Bool $greedy  = $<ebnfSuffix><GREED> ?? True !! False;
 
     if $<lexerAtom> {
