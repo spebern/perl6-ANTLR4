@@ -6,8 +6,10 @@ plan 56;
 
 my $parser = ANTLR4::Grammar.new;
 
-for dir 'corpus' -> $grammar-file {
-    if $grammar-file ~~ 'corpus/VisualBasic6.g4' {
+my $test-dir = IO::Path.new($?FILE).parent;
+
+for dir("$test-dir/test-files").grep({ $_.ends-with('.g4') }) -> $grammar-file {
+    if $grammar-file.ends-with('VisualBasic6.g4') {
         skip 'Need to fix UTF-8 issue', 1;
     }
     else {
