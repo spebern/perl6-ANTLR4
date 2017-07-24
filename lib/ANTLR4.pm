@@ -45,7 +45,7 @@ sub rules($ast) {
 	if 'skip' ~~ any(@commands».keys.flat) or
 	   'hidden' ~~ any(@commands.grep({ $_<channel>:exists }).map({ lc $_<channel> })) {
 	    if $ws-token-content {
-		$ws-token-content ~~ s/\)$/ \| $translation/;
+		$ws-token-content ~~ s/\)$/ \| $translation\)/;
 	    }
 	    else {
 		if $translation.starts-with('(') and $translation.ends-with(')') {
@@ -92,7 +92,21 @@ sub modify($ast, $term is copy --> Str) {
 }
 
 sub alternation($ast --> Str) {
-    return join ' | ', map { term($_) }, $ast<contents>.flat;
+    my @terms = $ast<contents>.flat.map({ term($_) });
+
+    my $translation = @terms[0];
+    if @terms.elems > 1 {
+	for @terms[1 .. *] -> $term {
+	    if $term.starts-with('#={<EOF>}') {
+		$translation ~= " $term";
+	    }
+	    else {
+		$translation ~= " | $term";
+	    }
+	}
+    }
+
+    return $translation;
 }
 
 sub concatenation($ast --> Str) {

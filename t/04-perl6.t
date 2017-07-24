@@ -368,6 +368,15 @@ subtest sub {
     is g4-to-perl6( q{grammar Clojure;SYMBOL_HEAD : ~('0' .. '9' | '^' | '`' | '\'' | '"' | '#' | '~' | '@' | ':' | '/' | '%' | '(' | ')' | '[' | ']' | '{' | '}' | [ \n\r\t\,]);} ),
         q{grammar Clojure { token SYMBOL_HEAD { <-[0..9 ^ ` \'  " # ~ @ : / % ( ) \[ \] { } \s \n \r \t \,]> } }},
        'flatten content of negated character class';
+
+    is g4-to-perl6(
+	q{grammar SQLite;
+	  SINGLE_LINE_COMMENT : '--' ~[\r\n]* -> channel(HIDDEN);
+	  MULTILINE_COMMEN : '/*' .*? ( '*/' | EOF ) -> channel(HIDDEN);
+	  SPACES : [ \u000B\t\r\n] -> channel(HIDDEN);
+	 }),
+        q{grammar SQLite { token ws { ('--' <-[\r \n]>* #={ "commands" : [ { "channel" : "HIDDEN" } ] } | '/*' .*? ('*/' #={<EOF>}) #={ "commands" : [ { "channel" : "HIDDEN" } ] } | <[\s \x[000B] \t \r \n]>)* } }},
+        'complex token ws generation';
 }, 'longer fragments';
 
 # vim: ft=perl6
