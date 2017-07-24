@@ -363,7 +363,7 @@ subtest sub {
 
     is g4-to-perl6("grammar Clojure; TRASH : ( WS | COMMENT ) -> channel(HIDDEN);"),
         q{grammar Clojure { token ws { (<WS> | <COMMENT>)* } }},
-        'ignore EOF token';
+        'map channel hidden to "token ws"';
 
     is g4-to-perl6( q{grammar Clojure;SYMBOL_HEAD : ~('0' .. '9' | '^' | '`' | '\'' | '"' | '#' | '~' | '@' | ':' | '/' | '%' | '(' | ')' | '[' | ']' | '{' | '}' | [ \n\r\t\,]);} ),
         q{grammar Clojure { token SYMBOL_HEAD { <-[0..9 ^ ` \'  " # ~ @ : / % ( ) \[ \] { } \s \n \r \t \,]> } }},
