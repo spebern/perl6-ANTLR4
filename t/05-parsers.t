@@ -2,7 +2,7 @@ use v6;
 use Test;
 use ANTLR4;
 
-plan 3;
+plan 4;
 
 my @grammars-to-test = [
     {
@@ -19,6 +19,20 @@ my @grammars-to-test = [
 	name             => 'fasta',
 	token-top        => 'sequence',
 	test-file-ending => 'fasta',
+    },
+    # TODO: comments don't work and also the following struct
+    # because of :type :apple
+    #(defn create-apple []
+    #  {:location [(rand-int width) (rand-int height)]
+    #   :color (Color. 210 50 90)
+    #   :type :apple})
+    # the problem with the comment is that ';' is missing in the character class of SYMBOL_HEAD
+    #   rule SYMBOL_HEAD { <-[0..9 ^ ` \'  " # ~ @ : / % ( ) \[ \] { } \s \n \r \t \,]> }
+    # ';' will be matched as SYMBOL_HEAD
+    {
+	name             => 'Clojure',
+	token-top        => 'file',
+	test-file-ending => 'clj',
     },
 ];
 
