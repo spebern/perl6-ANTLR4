@@ -2,7 +2,7 @@ use v6;
 use Test;
 use ANTLR4;
 
-plan 4;
+plan 5;
 
 my @grammars-to-test = [
     {
@@ -33,6 +33,11 @@ my @grammars-to-test = [
 	name             => 'Clojure',
 	token-top        => 'file',
 	test-file-ending => 'clj',
+    },
+    {
+	name             => 'SQLite',
+	token-top        => 'parse',
+	test-file-ending => 'sql',
     },
 ];
 
