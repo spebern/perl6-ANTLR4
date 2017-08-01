@@ -328,11 +328,16 @@ sub json-info($ast, @keys --> Str) {
 }
 
 sub ast($ast --> Str) {
-    my Str $rules = '';
+    my $rules = '';
     $rules = join "\n", rules($ast);
 
-    my Str $grammar = qq{grammar $ast<name> { $rules }};
-    $grammar ~= json-info($ast, <type options imports tokens actions>);
+    my $grammar = qq{grammar $ast<name> { $rules }};
+    if $ast<type> eq 'DEFAULT' {
+        $grammar ~= json-info($ast, <options imports tokens actions>);
+    }
+    else {
+        $grammar ~= json-info($ast, <type options imports tokens actions>);
+    }
     return $grammar;
 }
 
