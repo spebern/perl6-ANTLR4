@@ -23,7 +23,7 @@ use JSON::Tiny;
 use ANTLR4::Grammar;
 use ANTLR4::Actions::AST;
 
-sub java-to-perl-utf8(Str $utf8 is copy) {
+sub java-to-perl-utf8(Str $utf8 is copy --> Str) {
     $utf8 ~~ s/\\u(....)/\\x[$0]/;
     return $utf8;
 }
@@ -142,7 +142,7 @@ sub concatenation($ast --> Str) {
                         if term($last-concatinated-term) eq $content-translation {
                             my Str $deliminator = join ' ', map {
                                 term($_)
-                            }, $concatination<contents>.flat[ 0 .. * -2];
+                            }, $concatination<contents>.flat[0 .. * -2];
                             $translation ~= qq{ ( $content-translation+ %% $deliminator )};
                             ++$i;
                             next;
@@ -339,5 +339,6 @@ sub g4-to-perl6(Str $g4, --> Str) is export {
     my $ast = ANTLR4::Grammar.new.parse(
        $g4, actions => ANTLR4::Actions::AST 
     ).made;
+
     return ast($ast);
 }

@@ -186,7 +186,6 @@ method elementOption($/) {
     make ~$<key> => $<value>.made;
 }
 
-
 method optionValue($/) {
     make $<DIGITS> ?? +$<DIGITS>            !! $<STRING_LITERAL>
                    ?? ~$<STRING_LITERAL>[0] !! $<ID_list>.made;
@@ -340,6 +339,7 @@ method atom($/) {
         elsif $notSet<blockSet> {
             make $notSet<blockSet>.made;
         }
+
         $/.made<complemented> = True;
     }
     elsif $<LEXER_CHAR_SET> {
