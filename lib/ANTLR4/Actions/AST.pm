@@ -200,7 +200,7 @@ method ID($/) {
 }
 
 method grammarType($/) {
-    make ~$/[0] if $/[0];
+    make $/[0] ?? ~$/[0] !! 'DEFAULT';
 }
 
 method ruleSpec($/) {
