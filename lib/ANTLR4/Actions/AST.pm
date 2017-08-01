@@ -460,6 +460,20 @@ method range($/) {
     }
 }
 
+method setElementAltList($/) {
+    my @contents = $<setElement>».made;
+
+    if @contents.elems == 1 {
+        make @contents[0];
+    }
+    else {
+        make {
+            type     => 'alternation',
+            contents => @contents,
+        }
+    }
+}
+
 method setElement($/) {
     if $<LEXER_CHAR_SET> {
         make $<LEXER_CHAR_SET>.made;
@@ -469,6 +483,14 @@ method setElement($/) {
             type    => $<terminal><STRING_LITERAL> ?? 'terminal' !! 'nonterminal',
             content => $/.Str.trim,
         }
+    }
+}
+
+method blockSet($/) {
+    # TODO: is this always used complemened?
+    make {
+	type    => 'character class',
+	contents => $<setElementAltList>.made<contents>,
     }
 }
 

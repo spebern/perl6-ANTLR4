@@ -377,6 +377,10 @@ subtest sub {
 	 }),
         q{grammar SQLite { token ws { ('--' <-[\r \n]>* #={ "commands" : [ { "channel" : "HIDDEN" } ] } | '/*' .*? ('*/' #={<EOF>}) #={ "commands" : [ { "channel" : "HIDDEN" } ] } | <[\s \x[000B] \t \r \n]>)* } }},
         'complex token ws generation';
+
+    is g4-to-perl6( q{grammar C; gccAttribute :   ~(',' | '(' | ')');} ),
+       q{grammar C { token gccAttribute { <-[, ( )]> } }},
+       'negated block set';
 }, 'longer fragments';
 
 # vim: ft=perl6
