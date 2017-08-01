@@ -14,13 +14,13 @@ my $g = ANTLR4::Grammar.new;
 #
 is-deeply
   $g.parse( q{grammar Minimal;}, :actions($a) ).ast,
-  { type     => Nil,
+  { type     => 'DEFAULT',
     name     => 'Minimal',
     rules    => [],
-    options  => (),
-    imports  => (),
-    tokens   => (),
-    actions  => ()}
+    options  => $(().Seq),
+    imports  => $(().Seq),
+    tokens   => $(().Seq),
+    actions  => $(().Seq)},
   q{Minimal grammar};
 
 #
@@ -167,29 +167,22 @@ subtest sub {
 is-deeply
   $g.parse(
     q{grammar Name; number : '1' ;},
-    :actions($a) ).ast,
-  { type     => Nil,
-    name     => 'Name',
-    options  => (),
-    imports  => (),
-    tokens   => (),
-    actions  => (),
-    rules    =>
-      [${ name      => 'number',
-          attribute => Nil,
-          action    => Nil,
-          returns   => Nil,
-          throws    => Nil,
-          locals    => Nil,
-          options   => Nil,
-          content   =>
-            ${ type     => 'terminal',
-               label    => Nil,
-               greedy   => False,
-               modifier => '',
-               options  => Nil,
-               # commands => (),
-               content  => "'1'", }}]},
+    :actions($a) ).ast<rules>,
+    [${ name      => 'number',
+        attribute => Nil,
+        action    => Nil,
+        returns   => Nil,
+        throws    => Nil,
+        locals    => Nil,
+        options   => Nil,
+        content   =>
+          ${ type     => 'terminal',
+             label    => Nil,
+             greedy   => False,
+             modifier => '',
+             options  => Nil,
+             # commands => (),
+             content  => "'1'", }}],
   q{Single rule};
 
 subtest sub {
@@ -290,7 +283,7 @@ is-deeply
             ${ type     => 'terminal',
                greedy   => False,
                modifier => '',
-               commands => [${channel => Nil}],
+               commands => [${channel => 'HIDDEN'}],
                content  => "'1'", }}]}<rules>[0]<content>,
   q{Single lexer rule};
 
