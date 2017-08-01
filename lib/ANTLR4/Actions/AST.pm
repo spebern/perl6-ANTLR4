@@ -444,12 +444,8 @@ method lexerAtom($/) {
 method LEXER_CHAR_SET($/) {
     make {
         type     => 'character class',
-        contents => $/[0]».<LEXER_CHAR_SET_RANGE>».made,
+        contents => [$/[0].map({ ~$_ eq ' ' ?? '\s' !! ~$_ })],
     }
-}
-
-method LEXER_CHAR_SET_RANGE($/) {
-    make ~$/ eq ' ' ?? '\s' !! ~$/;
 }
 
 method range($/) {

@@ -381,6 +381,10 @@ subtest sub {
     is g4-to-perl6( q{grammar C; gccAttribute :   ~(',' | '(' | ')');} ),
        q{grammar C { token gccAttribute { <-[, ( )]> } }},
        'negated block set';
+
+    is g4-to-perl6( q{grammar Lua; ExponentPart : [eE] [+-]? [0-9] Digit+;}),
+       q{grammar Lua { token ExponentPart { <[e E]> <[+ -]>? <[0 .. 9]> <Digit>+ } }},
+       'negated block set';
 }, 'longer fragments';
 
 # vim: ft=perl6
