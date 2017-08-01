@@ -264,12 +264,13 @@ sub regular-expression($ast --> Str) {
 };
 
 sub capturing-group($ast --> Str) {
-    my $translation = '';
-    $translation ~= '!' if $ast<complemented>;
+    if $ast<complemented> {
+        die "capturing group cannot be complemented";
+    }
 
     my $group = term($ast<content>);
     
-    $translation ~= qq{($group)};
+    my $translation ~= qq{($group)};
     return modify($ast, $translation);
 }
 
